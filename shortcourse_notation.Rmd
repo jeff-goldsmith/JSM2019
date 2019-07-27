@@ -1,0 +1,107 @@
+---
+title: "Notation for FDA"
+output:
+  html_document: 
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 8,
+  fig.height = 4
+)
+```
+
+This page contains a combination of traditional lecture materials (slides) and code demonstrating the relevant methods. The short course will proceed by working through both. We will use several recent packages in our examples; see the [About](./About.html) page for information about the package versions.
+
+```{r setup}
+
+library(tidyverse)
+library(refund.shiny)
+
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+## Notation for functional data
+
+<script async class="speakerdeck-embed" data-id="22db63f1cf324ec6b998c631191af6ed" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+<div style="margin-bottom:5px"> <strong> <a href="https://speakerdeck.com/jeffgoldsmith/short-course-notation" title="Wearables Short Course: Notation for FDA" target="_blank">Wearables Short Course: Notation for FDA</a> </strong> from <strong><a href="https://speakerdeck.com/jeffgoldsmith" target="_blank">Jeff Goldsmith</a></strong>. </div>
+
+## Practical example
+
+In this section we will use the [HeadStart data](./Data.html) as an example to review notation and demonstrate useful plots of functional data. The code below loads this dataset.
+
+```{r headstart_load, eval = TRUE}
+
+load("./DataCode/HeadStart.RDA")
+
+```
+
+First, we plot a single subject to illustrate the "functional" nature of these data. 
+
+```{r headstart_onesubj, eval = TRUE}
+
+as_refundObj(accel) %>% 
+	filter(id == 1) %>%
+	ggplot(aes(x = index, y = value)) + geom_path()
+
+```
+
+Next, we plot all subjects. The previous plot is a single noodle in this plot of spaghetti.
+
+```{r headstart_spaghetti, eval = TRUE}
+
+as_refundObj(accel) %>% 
+	ggplot(aes(x = index, y = value, group = id)) + geom_path(alpha = .1)
+
+```
+
+Now we compute the mean at each time point separately, and add this to our spaghetti. 
+
+```{r headstart_pw_mean, eval = TRUE}
+
+pw_mean = as_refundObj(accel) %>%
+	group_by(index) %>%
+	summarize(pw_mean = mean(value))
+
+as_refundObj(accel) %>% 
+	ggplot(aes(x = index, y = value, group = id)) + geom_path(alpha = .1) +
+	geom_path(data = pw_mean, aes(y = pw_mean, group = NULL), color = "red", size = 1)
+
+```
+
+The pointwise mean is a bit jagged; now we use a smooth mean estimate.
+
+```{r headstart_smooth_mean, eval = TRUE}
+
+as_refundObj(accel) %>% 
+	ggplot(aes(x = index, y = value, group = id)) + geom_path(alpha = .1) +
+	geom_smooth(aes(group = NULL), color = "red", size = 1) 
+
+```
+
+Rainbow plots color each noodle according to some covariate value. We illustrate this using BMI Z-score. 
+
+```{r headstart_rainbow, eval = TRUE}
+
+as_refundObj(accel) %>% 
+	left_join(dplyr::select(covariate_data, id, BMIZ)) %>%
+	ggplot(aes(x = index, y = value, group = id, color = BMIZ)) + geom_path(alpha = .5) + 
+  scale_colour_gradientn(colours = c("red","yellow","green","lightblue","darkblue"),
+                         values = c(1.0, 0.6, 0.55, 0.45, 0.4, 0))
+
+```
+
+Lastly, we show the covariance surface to get an idea of the overall variance and the correlation across times. 
+
+```{r headstart_covariance, eval = TRUE, fig.height = 5, fig.width = 7}
+
+library(plotly)
+
+covariance = cov(accel)
+plot_ly(z = ~covariance) %>% add_surface()
+
+```

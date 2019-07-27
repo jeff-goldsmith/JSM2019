@@ -1,0 +1,17 @@
+---
+title: "About This Website"
+---
+
+This is an [R Markdown website](http://rmarkdown.rstudio.com/rmarkdown_websites.html), created by [Jeff Goldsmith](http://jeffgoldsmith.com) and [Vadim Zipunnikov](http://www.biostat.jhsph.edu/~vzipunni/) for the JSM 2019 continuing education course titled ["Functional Data Analysis for Wearables: Methods and Applications"](https://ww2.amstat.org/meetings/jsm/2019/onlineprogram/ActivityDetails.cfm?SessionID=218199).
+
+In the short course, we'll actively use the `refund` packages, and sometimes will use `refund.shiny` and `tidyverse`. Code to install the packages follows, and version information about each of these packages and their dependencies is at the bottom of this page.
+```{r, eval=FALSE}
+install.packages(c("refund", "refund.shiny", "tidyverse"))
+```
+
+Versions of key packages:
+
+```{r}
+devtools::session_info(c("refund", "refund.shiny"))
+```
+

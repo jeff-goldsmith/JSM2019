@@ -1,0 +1,239 @@
+---
+title: "Scalar-on-Function Regression"
+output:
+  html_document: 
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 8,
+  fig.height = 4
+)
+```
+
+
+This page contains a combination of traditional lecture materials (slides) and code demonstrating the relevant methods. The short course will proceed by working through both. We will use several recent packages in our examples; see the [About](./About.html) page for information about the package versions.
+
+```{r setup}
+library(tidyverse)
+library(grpreg)
+library(splines)
+library(refund)
+library(refund.shiny)
+library(reshape2)
+library(plotly)
+```
+
+In this section we'll use the [NHANES_JSM_2019](./Data.html) to illustrate scalar-on-function regression (sofr).
+
+## Introduction
+
+So far, we treated diurnal profiles in unsupervised way by learning diurnal variation via fPCA
+
+## Functional linear regression 
+
+Multiple linear regression:
+$$
+y_i = \mathbf{x}_i^T\boldsymbol{\beta} + \epsilon_i
+$$
+
+Linear functional regression equivalents:
+
+* Scalar-on-Function Regression (SoFR): scalar response, functional predictor;
+* Function-on-Scalar Regression (FoSR): functional response, scalar predictor;
+* Function-on-Function Regresson (FoFR): functional response, functional predictor;
+
+Let us assume that our data contains
+
+$$
+\left[y_{i},z_{i},\{x_{i}(t), t = 1,\ldots, 24\}\right], \qquad i = 1,\ldots, n,
+$$
+
+
+where 
+
+* $y_{i}$ is a scalar outcome
+* $z_{i}$ are the adjustment covariates (Age, Gender) of a subject $i$
+* $x_{i}(t)$ is a functional predictor 
+
+Naive multiple regresion model (MLR) can be written as 
+
+$$
+y_{i} = \mu +z_{i} \gamma + \sum_{t=1}^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i}, \qquad i = 1,\ldots, n
+$$
+
+**SoFR** is a functional equivalent of MLR model can be written as 
+
+$$
+y_{i} = \mu +z_{i} \gamma + \int_1^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i}, \qquad i = 1,\ldots, n
+$$
+
+* $\mu$ is a population mean
+* $\gamma$ are scalar regression parameters 
+* $\beta(t)$ is a functional regression parameter
+
+
+## SoFR approaches 
+
+SoFR employs smoothness and reduce the actual number of paramaters that needs to be estimated.
+
+For example, in our NHANES example,  after we apply fPCA to the diurnal profiles, we can work with **3 uncorrelated scores** $\xi_{i1}, \xi_{i2}, \xi_{i3}$ that jointly preserve roughly 70% of total variation.
+
+We will consider three SoFR approaches.
+
+1. fPCA regression via fPCA of functional predictors
+2. Functional basis expansion
+3. Smoothness penalty
+
+### Approach #1: Functional PCA Regression
+
+Using fPCA, we can decompose functional predictors $x_i(t)$ as
+
+$$x_i(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\hat{\xi}_{ik}.$$
+
+Then, the functional regression parameter $beta(t)$ is modelled as a linear combination of the functional PC
+
+$$\beta(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\beta_k.$$
+
+Using orthogonality of the functional principal components, SoFR model becomes a regular MLR
+
+$$
+y_{i} = \mu +z_{i} \gamma + \int_1^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i} =\mu +z_{i}\gamma +\sum_{k=1}^K\hat{\xi}_{ik}\beta_k + \varepsilon_i,\qquad i = 1,\ldots, n
+$$
+where functional PC scores $\hat{\xi}_{ik}$ are **known and orthonormal** and $\beta = (\beta_1,\ldots, \beta_K)$ are corresponding unknown scalar regression coefficients.
+
+Thus, the problem of estimating functional regression parameter $\beta(t)$ is reduced to the problem of estimaing scalar regression parameters $(\beta_1,\ldots, \beta_K)$.
+
+#### Example 1. Functional linear model
+
+In this example, we perform SoFR of BMI (continuous outcome) on fPC1, fPC2, fPC3 scores adjusted for Age and Gender.
+
+```{r sofr_call_01, eval = TRUE}
+load("./DataCode/NHANES_JSM_2019.RData")
+
+hTAC = as.matrix(hTAC)
+n = dim(hTAC)[1] # number of participants
+hTAC.demean = hTAC - matrix(apply(hTAC, 2, mean), n, 24, byrow = TRUE)
+
+## calculate fPCs
+s = fpca.sc(hTAC, var = TRUE, npc = 6)
+x.mean = s$mu
+phi.fpca = s$efunctions
+lambda.fpca = s$evalues
+sigma.fpca = s$sigma2
+
+## fPCs
+fPC1 = phi.fpca[,1]
+fPC2 = phi.fpca[,2]
+fPC3 = phi.fpca[,3]
+
+## fPCs scores
+fPC1.score = as.matrix(hTAC.demean) %*% fPC1
+fPC2.score = as.matrix(hTAC.demean) %*% fPC2
+fPC3.score = as.matrix(hTAC.demean) %*% fPC3
+
+## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
+fit.1 <- lm(scale(BMI) ~ scale(Age) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score))
+summary(fit.1)$call
+summary(fit.1)$coefficients
+```
+Note that the fPCs scores are uncorrelation and normalized, so the magnitude of the estimated coefficients is interpretable. 
+
+We can now calcuale the functional regression parameter $\hat{\beta}(t)$ as a linear combination of fPCs.
+
+```{r sofr_call_02, eval = TRUE}
+
+## functional regression coefficient
+beta <- fPC1*summary(fit.1)$coefficients[4,1] + fPC2*summary(fit.1)$coefficients[5,1] + fPC3*summary(fit.1)$coefficients[6,1]
+
+plot(1:24, beta, xaxt = "n", xlab = "Time of Day", ylab = "AU",  lwd = 2, col = "blue", type = "l")
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
+abline(h = 0, col = "gray", lwd = 2)
+abline(v = 1:24, col = "gray", lty = "dotted")
+```
+
+> Statistical inference now can be done using the same techniques as in MLR.
+
+The fPCA trick can be applied in the same way in a wider class of models. The next shows how this trick can be used within Generalized Linear Models.
+
+#### Example 2. Functional logistic regression 
+
+In this example, we fit a logistic regression of Diabetes (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.
+
+```{r sofr_call_03, eval = TRUE}
+## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
+fit.2 <- glm(Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), "binomial")
+summary(fit.2)$call
+summary(fit.2)$coefficients
+```
+
+Functional regression parameter $\beta(t)$ is estimated as a linear combination of the fPCs
+
+```{r sofr_call_04, eval = TRUE}
+beta <- fPC1*summary(fit.2)$coefficients[5,1] + fPC2*summary(fit.2)$coefficients[6,1] + fPC3*summary(fit.2)$coefficients[7,1]
+
+plot(1:24, beta, xaxt = "n", xlab = "Time of Day", ylab = "AU", lwd = 2, col = "blue", type = "l")
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
+abline(h = 0, col = "gray", lwd = 2)
+abline(v = 1:24, col = "gray", lty = "dotted")
+```
+
+#### Summary
+
+Major advantage of fPCA regression: straightforward to implement.
+
+Major disadvantages of fPCA regression:
+
+* assumes that $\beta(t)$ has similar smoothness as $x_i(t)$;
+* uses the same number of fPCs $K (=3)$ to model both $\beta(t)$ and $x_i(t)$; 
+* assumes that captured variability using an unsuperfised way is relevant to the outcome.
+
+### Approach #2: Functional basis expansion
+
+This approach is similar to fPCA regression. The major difference is that the functional (smooth) basis $\{B_k(t)\}_{k=1}^K$ has to be prespecified. Once a basis chosen, the regression parameter can be expended as $\beta(t) = \sum_{k=1}^K B_k(t)\theta_k$. 
+
+Then, the main SoFR model can be written as
+
+$$\int_1^{24} x_i(t)\beta(t)\mathrm{d}t = \sum_{k=1}^c \theta_k \int_1^{24} x_i(t)B_k(t)\mathrm{d}t =\sum_{k=1}^c \theta_k\tilde{x}_{ik},\qquad i = 1,\ldots, n$$
+
+where $\tilde{x}_{ik} = \int_1^{24} x_i(t)B_k(t)\mathrm{d}t$ and $\tilde{\mathbf{x}}_i = (\tilde{x}_{i1},\ldots, \tilde{x}_{ic})^T$.
+
+
+Thus, we again reduced the problem to a standard MLR model
+
+$$
+y_i =  \mu +z_{i} \gamma + \tilde{\mathbf{x}}_i^T\boldsymbol{\theta} + \epsilon_i, \qquad i = 1,\ldots,n
+$$
+
+Now, the model can be fitted with standard regression methods.
+
+### Approach #3: Smoothness penalty
+
+Both approaches that we have considered so far cannot automatically tune in to choose an appropriate level of smoothness. For example, the second approach would only allow to include a large number of basis functions that would result in an unnecessarily large number of parameters. The approach we will consider next addresses this problem. 
+
+Penalized least squares adds a penalty term that both controls the level of smoothness and the effective number of fitted parameters.
+
+$$
+pLS = \sum_{i=1}^n \left[y_i - \mu - z_{i} \gamma  -\int_1^{24} x_i(t)\beta(t)\mathrm{d}t \right]^2 + \lambda \int_1^{24} \left[D^2 \{\beta(t)\}\right]^2\mathrm{d}t
+$$
+
+So, we can apply the functional basis expansion of the functional regression parameter $\beta(t)$, as we did in Approach #2, to get
+
+$$
+pLS = \sum_{i=1}^n \left(y_i - \mu - z_{i} \gamma - \tilde{\mathbf{x}}_i^T\boldsymbol{\theta} \right)^2 + \lambda \boldsymbol{\theta}^T\mathbf{P}\boldsymbol{\theta}.
+$$
+
+Note that this problem is quadratic with respect to the regression parameters $\mu, \gamma, \theta$ and has a closed form solution for any fixed value of the tuning parameter $\lambda$. 
+
+$$
+\{\hat{\alpha},\hat{\gamma},\hat{\boldsymbol{\theta}}\} =\arg \min_{\alpha,\gamma,\boldsymbol{\theta}} pLS
+$$
+
+The tuning parameter $\lambda$ is typically chosen via cross-validation techniques.
+
+
+

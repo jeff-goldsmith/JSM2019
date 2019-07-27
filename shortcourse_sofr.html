@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Scalar-on-Function Regression</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 60px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h2 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h3 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h4 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h5 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.section h6 {
+  padding-top: 65px;
+  margin-top: -65px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">JSM 2019</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Short Course
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="shortcourse_data.html">Data and Code</a>
+    </li>
+    <li>
+      <a href="shortcourse_wearables_overview.html">Wearables: overview</a>
+    </li>
+    <li>
+      <a href="shortcourse_notation.html">Notation</a>
+    </li>
+    <li>
+      <a href="shortcourse_fpca.html">Functional PCA</a>
+    </li>
+    <li>
+      <a href="shortcourse_sofr.html">Scalar-on-Function Regression</a>
+    </li>
+    <li>
+      <a href="shortcourse_fosr.html">Function-on-Scalar Regression</a>
+    </li>
+    <li>
+      <a href="shortcourse_other_functional_approaches.html">Other Functional Approaches</a>
+    </li>
+    <li>
+      <a href="shortcourse_wearables_non-functional_approaches.html">Wearables: Non-Functional methods</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="http://github.com/jeff-goldsmith/JSM">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Scalar-on-Function Regression</h1>
+
+</div>
+
+
+<p>This page contains a combination of traditional lecture materials (slides) and code demonstrating the relevant methods. The short course will proceed by working through both. We will use several recent packages in our examples; see the <a href="./About.html">About</a> page for information about the package versions.</p>
+<pre class="r"><code>library(tidyverse)
+library(grpreg)
+library(splines)
+library(refund)
+library(refund.shiny)
+library(reshape2)
+library(plotly)</code></pre>
+<p>In this section we’ll use the <a href="./Data.html">NHANES_JSM_2019</a> to illustrate scalar-on-function regression (sofr).</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>So far, we treated diurnal profiles in unsupervised way by learning diurnal variation via fPCA</p>
+</div>
+<div id="functional-linear-regression" class="section level2">
+<h2>Functional linear regression</h2>
+<p>Multiple linear regression: <span class="math display">\[
+y_i = \mathbf{x}_i^T\boldsymbol{\beta} + \epsilon_i
+\]</span></p>
+<p>Linear functional regression equivalents:</p>
+<ul>
+<li>Scalar-on-Function Regression (SoFR): scalar response, functional predictor;</li>
+<li>Function-on-Scalar Regression (FoSR): functional response, scalar predictor;</li>
+<li>Function-on-Function Regresson (FoFR): functional response, functional predictor;</li>
+</ul>
+<p>Let us assume that our data contains</p>
+<p><span class="math display">\[
+\left[y_{i},z_{i},\{x_{i}(t), t = 1,\ldots, 24\}\right], \qquad i = 1,\ldots, n,
+\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(y_{i}\)</span> is a scalar outcome</li>
+<li><span class="math inline">\(z_{i}\)</span> are the adjustment covariates (Age, Gender) of a subject <span class="math inline">\(i\)</span></li>
+<li><span class="math inline">\(x_{i}(t)\)</span> is a functional predictor</li>
+</ul>
+<p>Naive multiple regresion model (MLR) can be written as</p>
+<p><span class="math display">\[
+y_{i} = \mu +z_{i} \gamma + \sum_{t=1}^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i}, \qquad i = 1,\ldots, n
+\]</span></p>
+<p><strong>SoFR</strong> is a functional equivalent of MLR model can be written as</p>
+<p><span class="math display">\[
+y_{i} = \mu +z_{i} \gamma + \int_1^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i}, \qquad i = 1,\ldots, n
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\mu\)</span> is a population mean</li>
+<li><span class="math inline">\(\gamma\)</span> are scalar regression parameters</li>
+<li><span class="math inline">\(\beta(t)\)</span> is a functional regression parameter</li>
+</ul>
+</div>
+<div id="sofr-approaches" class="section level2">
+<h2>SoFR approaches</h2>
+<p>SoFR employs smoothness and reduce the actual number of paramaters that needs to be estimated.</p>
+<p>For example, in our NHANES example, after we apply fPCA to the diurnal profiles, we can work with <strong>3 uncorrelated scores</strong> <span class="math inline">\(\xi_{i1}, \xi_{i2}, \xi_{i3}\)</span> that jointly preserve roughly 70% of total variation.</p>
+<p>We will consider three SoFR approaches.</p>
+<ol style="list-style-type: decimal">
+<li>fPCA regression via fPCA of functional predictors</li>
+<li>Functional basis expansion</li>
+<li>Smoothness penalty</li>
+</ol>
+<div id="approach-1-functional-pca-regression" class="section level3">
+<h3>Approach #1: Functional PCA Regression</h3>
+<p>Using fPCA, we can decompose functional predictors <span class="math inline">\(x_i(t)\)</span> as</p>
+<p><span class="math display">\[x_i(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\hat{\xi}_{ik}.\]</span></p>
+<p>Then, the functional regression parameter <span class="math inline">\(beta(t)\)</span> is modelled as a linear combination of the functional PC</p>
+<p><span class="math display">\[\beta(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\beta_k.\]</span></p>
+<p>Using orthogonality of the functional principal components, SoFR model becomes a regular MLR</p>
+<p><span class="math display">\[
+y_{i} = \mu +z_{i} \gamma + \int_1^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i} =\mu +z_{i}\gamma +\sum_{k=1}^K\hat{\xi}_{ik}\beta_k + \varepsilon_i,\qquad i = 1,\ldots, n
+\]</span> where functional PC scores <span class="math inline">\(\hat{\xi}_{ik}\)</span> are <strong>known and orthonormal</strong> and <span class="math inline">\(\beta = (\beta_1,\ldots, \beta_K)\)</span> are corresponding unknown scalar regression coefficients.</p>
+<p>Thus, the problem of estimating functional regression parameter <span class="math inline">\(\beta(t)\)</span> is reduced to the problem of estimaing scalar regression parameters <span class="math inline">\((\beta_1,\ldots, \beta_K)\)</span>.</p>
+<div id="example-1.-functional-linear-model" class="section level4">
+<h4>Example 1. Functional linear model</h4>
+<p>In this example, we perform SoFR of BMI (continuous outcome) on fPC1, fPC2, fPC3 scores adjusted for Age and Gender.</p>
+<pre class="r"><code>load(&quot;./DataCode/NHANES_JSM_2019.RData&quot;)
+
+hTAC = as.matrix(hTAC)
+n = dim(hTAC)[1] # number of participants
+hTAC.demean = hTAC - matrix(apply(hTAC, 2, mean), n, 24, byrow = TRUE)
+
+## calculate fPCs
+s = fpca.sc(hTAC, var = TRUE, npc = 6)
+x.mean = s$mu
+phi.fpca = s$efunctions
+lambda.fpca = s$evalues
+sigma.fpca = s$sigma2
+
+## fPCs
+fPC1 = phi.fpca[,1]
+fPC2 = phi.fpca[,2]
+fPC3 = phi.fpca[,3]
+
+## fPCs scores
+fPC1.score = as.matrix(hTAC.demean) %*% fPC1
+fPC2.score = as.matrix(hTAC.demean) %*% fPC2
+fPC3.score = as.matrix(hTAC.demean) %*% fPC3
+
+## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
+fit.1 &lt;- lm(scale(BMI) ~ scale(Age) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score))
+summary(fit.1)$call
+## lm(formula = scale(BMI) ~ scale(Age) + Male + scale(fPC1.score) + 
+##     scale(fPC2.score) + scale(fPC3.score))
+summary(fit.1)$coefficients
+##                      Estimate Std. Error    t value     Pr(&gt;|t|)
+## (Intercept)        0.09493530 0.02388346   3.974940 7.186352e-05
+## scale(Age)        -0.20302387 0.01803493 -11.257261 6.894190e-29
+## Male              -0.18864921 0.03400964  -5.546933 3.129950e-08
+## scale(fPC1.score)  0.17990275 0.01748004  10.291898 1.749784e-24
+## scale(fPC2.score) -0.05961699 0.01732641  -3.440816 5.869667e-04
+## scale(fPC3.score)  0.04144858 0.01696913   2.442587 1.463311e-02</code></pre>
+<p>Note that the fPCs scores are uncorrelation and normalized, so the magnitude of the estimated coefficients is interpretable.</p>
+<p>We can now calcuale the functional regression parameter <span class="math inline">\(\hat{\beta}(t)\)</span> as a linear combination of fPCs.</p>
+<pre class="r"><code>
+## functional regression coefficient
+beta &lt;- fPC1*summary(fit.1)$coefficients[4,1] + fPC2*summary(fit.1)$coefficients[5,1] + fPC3*summary(fit.1)$coefficients[6,1]
+
+plot(1:24, beta, xaxt = &quot;n&quot;, xlab = &quot;Time of Day&quot;, ylab = &quot;AU&quot;,  lwd = 2, col = &quot;blue&quot;, type = &quot;l&quot;)
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c(&quot;01:00&quot;, &quot;04:00&quot;, &quot;08:00&quot;, &quot;12:00&quot;, &quot;16:00&quot;, &quot;20:00&quot;, &quot;24:00&quot;))
+abline(h = 0, col = &quot;gray&quot;, lwd = 2)
+abline(v = 1:24, col = &quot;gray&quot;, lty = &quot;dotted&quot;)</code></pre>
+<p><img src="shortcourse_sofr_files/figure-html/sofr_call_02-1.png" width="768" /></p>
+<blockquote>
+<p>Statistical inference now can be done using the same techniques as in MLR.</p>
+</blockquote>
+<p>The fPCA trick can be applied in the same way in a wider class of models. The next shows how this trick can be used within Generalized Linear Models.</p>
+</div>
+<div id="example-2.-functional-logistic-regression" class="section level4">
+<h4>Example 2. Functional logistic regression</h4>
+<p>In this example, we fit a logistic regression of Diabetes (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.</p>
+<pre class="r"><code>## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
+fit.2 &lt;- glm(Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), &quot;binomial&quot;)
+summary(fit.2)$call
+## glm(formula = Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + 
+##     scale(fPC2.score) + scale(fPC3.score), family = &quot;binomial&quot;)
+summary(fit.2)$coefficients
+##                      Estimate Std. Error     z value      Pr(&gt;|z|)
+## (Intercept)       -1.61704295 0.06802867 -23.7700211 6.822374e-125
+## scale(Age)         0.02876821 0.05080875   0.5662059  5.712538e-01
+## scale(BMI)         0.35583319 0.04405527   8.0769718  6.639490e-16
+## Male               0.05384861 0.09401741   0.5727515  5.668129e-01
+## scale(fPC1.score)  0.37271655 0.04939311   7.5459224  4.490976e-14
+## scale(fPC2.score) -0.14821632 0.04901333  -3.0240002  2.494562e-03
+## scale(fPC3.score)  0.08290746 0.04799229   1.7275163  8.407499e-02</code></pre>
+<p>Functional regression parameter <span class="math inline">\(\beta(t)\)</span> is estimated as a linear combination of the fPCs</p>
+<pre class="r"><code>beta &lt;- fPC1*summary(fit.2)$coefficients[5,1] + fPC2*summary(fit.2)$coefficients[6,1] + fPC3*summary(fit.2)$coefficients[7,1]
+
+plot(1:24, beta, xaxt = &quot;n&quot;, xlab = &quot;Time of Day&quot;, ylab = &quot;AU&quot;, lwd = 2, col = &quot;blue&quot;, type = &quot;l&quot;)
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c(&quot;01:00&quot;, &quot;04:00&quot;, &quot;08:00&quot;, &quot;12:00&quot;, &quot;16:00&quot;, &quot;20:00&quot;, &quot;24:00&quot;))
+abline(h = 0, col = &quot;gray&quot;, lwd = 2)
+abline(v = 1:24, col = &quot;gray&quot;, lty = &quot;dotted&quot;)</code></pre>
+<p><img src="shortcourse_sofr_files/figure-html/sofr_call_04-1.png" width="768" /></p>
+</div>
+<div id="summary" class="section level4">
+<h4>Summary</h4>
+<p>Major advantage of fPCA regression: straightforward to implement.</p>
+<p>Major disadvantages of fPCA regression:</p>
+<ul>
+<li>assumes that <span class="math inline">\(\beta(t)\)</span> has similar smoothness as <span class="math inline">\(x_i(t)\)</span>;</li>
+<li>uses the same number of fPCs <span class="math inline">\(K (=3)\)</span> to model both <span class="math inline">\(\beta(t)\)</span> and <span class="math inline">\(x_i(t)\)</span>;</li>
+<li>assumes that captured variability using an unsuperfised way is relevant to the outcome.</li>
+</ul>
+</div>
+</div>
+<div id="approach-2-functional-basis-expansion" class="section level3">
+<h3>Approach #2: Functional basis expansion</h3>
+<p>This approach is similar to fPCA regression. The major difference is that the functional (smooth) basis <span class="math inline">\(\{B_k(t)\}_{k=1}^K\)</span> has to be prespecified. Once a basis chosen, the regression parameter can be expended as <span class="math inline">\(\beta(t) = \sum_{k=1}^K B_k(t)\theta_k\)</span>.</p>
+<p>Then, the main SoFR model can be written as</p>
+<p><span class="math display">\[\int_1^{24} x_i(t)\beta(t)\mathrm{d}t = \sum_{k=1}^c \theta_k \int_1^{24} x_i(t)B_k(t)\mathrm{d}t =\sum_{k=1}^c \theta_k\tilde{x}_{ik},\qquad i = 1,\ldots, n\]</span></p>
+<p>where <span class="math inline">\(\tilde{x}_{ik} = \int_1^{24} x_i(t)B_k(t)\mathrm{d}t\)</span> and <span class="math inline">\(\tilde{\mathbf{x}}_i = (\tilde{x}_{i1},\ldots, \tilde{x}_{ic})^T\)</span>.</p>
+<p>Thus, we again reduced the problem to a standard MLR model</p>
+<p><span class="math display">\[
+y_i =  \mu +z_{i} \gamma + \tilde{\mathbf{x}}_i^T\boldsymbol{\theta} + \epsilon_i, \qquad i = 1,\ldots,n
+\]</span></p>
+<p>Now, the model can be fitted with standard regression methods.</p>
+</div>
+<div id="approach-3-smoothness-penalty" class="section level3">
+<h3>Approach #3: Smoothness penalty</h3>
+<p>Both approaches that we have considered so far cannot automatically tune in to choose an appropriate level of smoothness. For example, the second approach would only allow to include a large number of basis functions that would result in an unnecessarily large number of parameters. The approach we will consider next addresses this problem.</p>
+<p>Penalized least squares adds a penalty term that both controls the level of smoothness and the effective number of fitted parameters.</p>
+<p><span class="math display">\[
+pLS = \sum_{i=1}^n \left[y_i - \mu - z_{i} \gamma  -\int_1^{24} x_i(t)\beta(t)\mathrm{d}t \right]^2 + \lambda \int_1^{24} \left[D^2 \{\beta(t)\}\right]^2\mathrm{d}t
+\]</span></p>
+<p>So, we can apply the functional basis expansion of the functional regression parameter <span class="math inline">\(\beta(t)\)</span>, as we did in Approach #2, to get</p>
+<p><span class="math display">\[
+pLS = \sum_{i=1}^n \left(y_i - \mu - z_{i} \gamma - \tilde{\mathbf{x}}_i^T\boldsymbol{\theta} \right)^2 + \lambda \boldsymbol{\theta}^T\mathbf{P}\boldsymbol{\theta}.
+\]</span></p>
+<p>Note that this problem is quadratic with respect to the regression parameters <span class="math inline">\(\mu, \gamma, \theta\)</span> and has a closed form solution for any fixed value of the tuning parameter <span class="math inline">\(\lambda\)</span>.</p>
+<p><span class="math display">\[
+\{\hat{\alpha},\hat{\gamma},\hat{\boldsymbol{\theta}}\} =\arg \min_{\alpha,\gamma,\boldsymbol{\theta}} pLS
+\]</span></p>
+<p>The tuning parameter <span class="math inline">\(\lambda\)</span> is typically chosen via cross-validation techniques.</p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
