@@ -95,7 +95,7 @@ Using fPCA, we can decompose functional predictors $x_i(t)$ as
 
 $$x_i(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\hat{\xi}_{ik}.$$
 
-Then, the functional regression parameter $beta(t)$ is modelled as a linear combination of the functional PC
+Then, the functional regression parameter $\beta(t)$ is modelled as a linear combination of the functional PC
 
 $$\beta(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\beta_k.$$
 

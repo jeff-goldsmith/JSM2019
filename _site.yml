@@ -27,7 +27,7 @@ navbar:
     - text: "About"
       href: about.html
     - icon: fa-github fa-lg
-      href: http://github.com/jeff-goldsmith/JSM
+      href: http://github.com/jeff-goldsmith/JSM2019
 output:
   html_document:
     theme: flatly

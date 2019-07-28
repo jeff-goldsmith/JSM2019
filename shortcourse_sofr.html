@@ -559,7 +559,7 @@ y_{i} = \mu +z_{i} \gamma + \int_1^{24}x_{i}(t)\beta(t)\mathrm{d}t + \epsilon_{i
 <h3>Approach #1: Functional PCA Regression</h3>
 <p>Using fPCA, we can decompose functional predictors <span class="math inline">\(x_i(t)\)</span> as</p>
 <p><span class="math display">\[x_i(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\hat{\xi}_{ik}.\]</span></p>
-<p>Then, the functional regression parameter <span class="math inline">\(beta(t)\)</span> is modelled as a linear combination of the functional PC</p>
+<p>Then, the functional regression parameter <span class="math inline">\(\beta(t)\)</span> is modelled as a linear combination of the functional PC</p>
 <p><span class="math display">\[\beta(t)\approx \sum_{k=1}^K\hat{\phi}_k(t)\beta_k.\]</span></p>
 <p>Using orthogonality of the functional principal components, SoFR model becomes a regular MLR</p>
 <p><span class="math display">\[
