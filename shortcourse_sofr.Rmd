@@ -28,7 +28,7 @@ library(reshape2)
 library(plotly)
 ```
 
-In this section we'll use the [NHANES_JSM_2019](./Data.html) to illustrate scalar-on-function regression (sofr).
+In this section we'll use the [NHANES_JSM_2019](./shortcourse_data.html) to illustrate scalar-on-function regression (sofr).
 
 ## Introduction
 
