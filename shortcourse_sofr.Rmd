@@ -143,14 +143,14 @@ summary(fit.1)$coefficients
 ```
 Note that the fPCs scores are uncorrelation and normalized, so the magnitude of the estimated coefficients is interpretable. 
 
-We can now calcuale the functional regression parameter $\hat{\beta}(t)$ as a linear combination of fPCs.
+We can now calcuale the functional regression parameter $\hat{\beta}(t)$ as a linear combination of the statistically significant fPCs scores.
 
 ```{r sofr_call_02, eval = TRUE}
 
 ## functional regression coefficient
 beta <- fPC1*summary(fit.1)$coefficients[4,1] + fPC2*summary(fit.1)$coefficients[5,1] + fPC3*summary(fit.1)$coefficients[6,1]
 
-plot(1:24, beta, xaxt = "n", xlab = "Time of Day", ylab = "AU",  lwd = 2, col = "blue", type = "l")
+plot(1:24, beta, ylim = c(-0.3, 0), xaxt = "n", xlab = "Time of Day", ylab = "AU",  lwd = 2, col = "blue", type = "l")
 axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
 abline(h = 0, col = "gray", lwd = 2)
 abline(v = 1:24, col = "gray", lty = "dotted")
@@ -162,19 +162,18 @@ The fPCA trick can be applied in the same way in a wider class of models. The ne
 
 #### Example 2. Functional logistic regression 
 
-In this example, we fit a logistic regression of Diabetes (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.
+In this example, we fit a logistic regression of CHF (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.
 
 ```{r sofr_call_03, eval = TRUE}
-## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
-fit.2 <- glm(Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), "binomial")
+fit.2 <- glm(CHF ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), "binomial")
 summary(fit.2)$call
 summary(fit.2)$coefficients
 ```
 
-Functional regression parameter $\beta(t)$ is estimated as a linear combination of the fPCs
+Functional regression parameter $\beta(t)$ is estimated as a linear combination of statistically significant fPCs scores
 
 ```{r sofr_call_04, eval = TRUE}
-beta <- fPC1*summary(fit.2)$coefficients[5,1] + fPC2*summary(fit.2)$coefficients[6,1] + fPC3*summary(fit.2)$coefficients[7,1]
+beta <- fPC1*summary(fit.2)$coefficients[5,1]
 
 plot(1:24, beta, xaxt = "n", xlab = "Time of Day", ylab = "AU", lwd = 2, col = "blue", type = "l")
 axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
@@ -235,5 +234,16 @@ $$
 
 The tuning parameter $\lambda$ is typically chosen via cross-validation techniques.
 
+#### Example #3.
+
+In the example, we use pfr() function in "refund".
+
+```{r sofr_call_05, eval = TRUE}
+y <- scale(BMI)
+X <- as.matrix(hTAC)
+fit.3 <- pfr(y ~ lf(X), method = "REML")
+plot(fit.3, shade= TRUE, ylim = c(-0.01, 0.01), col = "black", lwd = 3, bty = "l", shade.col = "azure3")
+abline(h = 0,col = "black")
+```
 
 

@@ -28,7 +28,7 @@ library(reshape2)
 library(plotly)
 ```
 
-In this section, we will use the [NHANES_JSM_2019](./shortcourse_data.html) data to illustrate scalar on function regression (sofr).
+In this section, we will use the [NHANES_JSM_2019](./Data.html) data to illustrate scalar on function regression (sofr).
 
 ## NHANES data
 
@@ -45,7 +45,7 @@ load("./DataCode/NHANES_JSM_2019.RData")
 
 hTAC = as.matrix(hTAC)
 n = dim(hTAC)[1] # number of participants
-col.light = rgb(0, 0, 0, alpha = 8, maxColorValue = 255)
+col.light = rgb(0, 0, 0, alpha = 5, maxColorValue = 255)
 x.range = 1:24
 
 ## plot all profiles 
@@ -149,7 +149,6 @@ abline(v = 1:24, col = "gray", lty = "dotted")
 abline(h = 0, col = "black", lty = "dotted", lwd = 2)
 ```
 
-
 ### PC1 
 
 PC1 explains 37.5% of total variation (note the local behaviour)
@@ -223,9 +222,37 @@ lines(-1.96*hTAC.sd, col = "blue", lwd = 3, type = "l", lty = "dashed")
 abline(v = 1:24, col = "gray", lty = "dotted")
 ```
 
-## Residual variability
+Let us consider a specific subject and plot subject's original profile, the profile representation via PC1, PC2, and PC3.
 
-De-meaned diurnal profiles
+```{r nhanes_all_subjects_07_a, eval = TRUE}
+s.id = 1
+plot(1:24, hTAC[s.id,], ylim = c(-300,300), xaxt = "n", xlab = "Time of Day", ylab = "Log of AC", lwd = 3, col = "black", type = "l")
+lines(1:24, hTAC.mean, col = "gray", lwd = 3, type = "l")
+lines(1:24, hTAC.PC1[s.id,], col = col[1], lwd = 3, type = "l")
+lines(1:24, hTAC.PC2[s.id,], col = col[2], lwd = 3, type = "l")
+lines(1:24, hTAC.PC3[s.id,], col = col[3], lwd = 3, type = "l")
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
+abline(v = 1:24, col = "gray", lty = "dotted")
+abline(h = 0, col = "black", lty = "dotted", lwd = 2)
+
+## corresponding scores for this subject
+PC1.score[s.id]
+PC2.score[s.id]
+PC3.score[s.id]
+```
+We also plot the original profile and demeaned profile, and profile after subtracting PC1, PC2, PC3 contributions.
+
+```{r nhanes_all_subjects_07_b, eval = TRUE}
+s.id = 1
+plot(1:24, hTAC[s.id,], ylim = c(-300,300), xaxt = "n", xlab = "Time of Day", ylab = "Log of AC", lwd = 3, col = "black", type = "l")
+lines(1:24, hTAC.demean[s.id,], col = "gray", type = "l")
+lines(1:24, hTAC.demean.minus.PC1[s.id,], col = col[1], lwd = 3, type = "l")
+lines(1:24, hTAC.demean.minus.PC2[s.id,], col = col[2], lwd = 3, type = "l")
+lines(1:24, hTAC.demean.minus.PC3[s.id,], col = col[3], lwd = 3, type = "l")
+axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"))
+abline(v = 1:24, col = "gray", lty = "dotted")
+abline(h = 0, col = "black", lty = "dotted", lwd = 2)
+```
 
 ```{r nhanes_all_subjects_11, eval = TRUE}
 plot(x.range, hTAC.demean[1,], type = "n", ylim = c(-300,300), xaxt = "n", ylab = "Log of Activity Counts", xlab = "Hour", col = col.light, main = "Diurnal Profiles")
@@ -361,7 +388,7 @@ abline(v = 1:24, col = "gray", lty = "dotted")
 
 Let us compare PC2 (blue dots) vs fPC2 (red curve)
 
-> Main reasons for not seeing larger differences: pre-smoothing (binning in hour epochs), smaller samples likely results in larger deviations.
+
 
 ```{r nhanes_all_subjects_17, eval = TRUE}
 # create de-meaned diurnal profiles, calculate 1st PC and subtract its contribution
@@ -375,6 +402,8 @@ axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c("01:00", "04:00", "08:00", "
 abline(h = 0, col = "gray", lwd = 2)
 abline(v = 1:24, col = "gray", lty = "dotted")
 ```
+
+> Main reasons for not seeing larger differences: pre-smoothing (binning in hour epochs), smaller samples likely results in larger deviations.
 
 ### Technical details 
 

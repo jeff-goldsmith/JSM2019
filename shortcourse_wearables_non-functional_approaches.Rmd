@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 This page contains a combination of traditional lecture materials (slides) and code demonstrating the relevant methods. The short course will proceed by working through both. We will use several recent packages in our examples; see the [About](./About.html) page for information about the package versions.
 
-## Non-functional approaches
+## Wearables: non-functional approaches
 
-PLACEHOLDER FOR PPT SLIDES
+Non-functional approaches are covered in [these slides](./SlidesPPT/non_functonal_approaches.pdf).
 

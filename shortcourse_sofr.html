@@ -569,12 +569,12 @@ summary(fit.1)$coefficients
 ## scale(fPC2.score) -0.05961699 0.01732641  -3.440816 5.869667e-04
 ## scale(fPC3.score)  0.04144858 0.01696913   2.442587 1.463311e-02</code></pre>
 <p>Note that the fPCs scores are uncorrelation and normalized, so the magnitude of the estimated coefficients is interpretable.</p>
-<p>We can now calcuale the functional regression parameter <span class="math inline">\(\hat{\beta}(t)\)</span> as a linear combination of fPCs.</p>
+<p>We can now calcuale the functional regression parameter <span class="math inline">\(\hat{\beta}(t)\)</span> as a linear combination of the statistically significant fPCs scores.</p>
 <pre class="r"><code>
 ## functional regression coefficient
 beta &lt;- fPC1*summary(fit.1)$coefficients[4,1] + fPC2*summary(fit.1)$coefficients[5,1] + fPC3*summary(fit.1)$coefficients[6,1]
 
-plot(1:24, beta, xaxt = &quot;n&quot;, xlab = &quot;Time of Day&quot;, ylab = &quot;AU&quot;,  lwd = 2, col = &quot;blue&quot;, type = &quot;l&quot;)
+plot(1:24, beta, ylim = c(-0.3, 0), xaxt = &quot;n&quot;, xlab = &quot;Time of Day&quot;, ylab = &quot;AU&quot;,  lwd = 2, col = &quot;blue&quot;, type = &quot;l&quot;)
 axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c(&quot;01:00&quot;, &quot;04:00&quot;, &quot;08:00&quot;, &quot;12:00&quot;, &quot;16:00&quot;, &quot;20:00&quot;, &quot;24:00&quot;))
 abline(h = 0, col = &quot;gray&quot;, lwd = 2)
 abline(v = 1:24, col = &quot;gray&quot;, lty = &quot;dotted&quot;)</code></pre>
@@ -586,23 +586,22 @@ abline(v = 1:24, col = &quot;gray&quot;, lty = &quot;dotted&quot;)</code></pre>
 </div>
 <div id="example-2.-functional-logistic-regression" class="section level4">
 <h4>Example 2. Functional logistic regression</h4>
-<p>In this example, we fit a logistic regression of Diabetes (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.</p>
-<pre class="r"><code>## fit linear model with BMI as the outcome and PC1, PC2, PC3 as predictors
-fit.2 &lt;- glm(Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), &quot;binomial&quot;)
+<p>In this example, we fit a logistic regression of CHF (binary outcome) on fPC1, fPC2, fPC3 scores adjusted for Age, BMI, and Gender.</p>
+<pre class="r"><code>fit.2 &lt;- glm(CHF ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + scale(fPC2.score) + scale(fPC3.score), &quot;binomial&quot;)
 summary(fit.2)$call
-## glm(formula = Diabetes ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + 
+## glm(formula = CHF ~ scale(Age) + scale(BMI) + Male + scale(fPC1.score) + 
 ##     scale(fPC2.score) + scale(fPC3.score), family = &quot;binomial&quot;)
 summary(fit.2)$coefficients
 ##                      Estimate Std. Error     z value      Pr(&gt;|z|)
-## (Intercept)       -1.61704295 0.06802867 -23.7700211 6.822374e-125
-## scale(Age)         0.02876821 0.05080875   0.5662059  5.712538e-01
-## scale(BMI)         0.35583319 0.04405527   8.0769718  6.639490e-16
-## Male               0.05384861 0.09401741   0.5727515  5.668129e-01
-## scale(fPC1.score)  0.37271655 0.04939311   7.5459224  4.490976e-14
-## scale(fPC2.score) -0.14821632 0.04901333  -3.0240002  2.494562e-03
-## scale(fPC3.score)  0.08290746 0.04799229   1.7275163  8.407499e-02</code></pre>
-<p>Functional regression parameter <span class="math inline">\(\beta(t)\)</span> is estimated as a linear combination of the fPCs</p>
-<pre class="r"><code>beta &lt;- fPC1*summary(fit.2)$coefficients[5,1] + fPC2*summary(fit.2)$coefficients[6,1] + fPC3*summary(fit.2)$coefficients[7,1]
+## (Intercept)       -3.28054544 0.13036012 -25.1652530 9.622512e-140
+## scale(Age)         0.35837116 0.08488556   4.2218154  2.423426e-05
+## scale(BMI)         0.38489030 0.06893231   5.5835978  2.355931e-08
+## Male               0.46239602 0.15581873   2.9675253  3.002076e-03
+## scale(fPC1.score)  0.50904172 0.08112814   6.2745393  3.506711e-10
+## scale(fPC2.score) -0.07335683 0.08347847  -0.8787516  3.795360e-01
+## scale(fPC3.score)  0.09564191 0.08299519   1.1523789  2.491654e-01</code></pre>
+<p>Functional regression parameter <span class="math inline">\(\beta(t)\)</span> is estimated as a linear combination of statistically significant fPCs scores</p>
+<pre class="r"><code>beta &lt;- fPC1*summary(fit.2)$coefficients[5,1]
 
 plot(1:24, beta, xaxt = &quot;n&quot;, xlab = &quot;Time of Day&quot;, ylab = &quot;AU&quot;, lwd = 2, col = &quot;blue&quot;, type = &quot;l&quot;)
 axis(1, at = c(1, 4, 8, 12, 16, 20, 24), labels = c(&quot;01:00&quot;, &quot;04:00&quot;, &quot;08:00&quot;, &quot;12:00&quot;, &quot;16:00&quot;, &quot;20:00&quot;, &quot;24:00&quot;))
@@ -649,6 +648,16 @@ pLS = \sum_{i=1}^n \left(y_i - \mu - z_{i} \gamma - \tilde{\mathbf{x}}_i^T\bolds
 \{\hat{\alpha},\hat{\gamma},\hat{\boldsymbol{\theta}}\} =\arg \min_{\alpha,\gamma,\boldsymbol{\theta}} pLS
 \]</span></p>
 <p>The tuning parameter <span class="math inline">\(\lambda\)</span> is typically chosen via cross-validation techniques.</p>
+<div id="example-3." class="section level4">
+<h4>Example #3.</h4>
+<p>In the example, we use pfr() function in “refund”.</p>
+<pre class="r"><code>y &lt;- scale(BMI)
+X &lt;- as.matrix(hTAC)
+fit.3 &lt;- pfr(y ~ lf(X), method = &quot;REML&quot;)
+plot(fit.3, shade= TRUE, ylim = c(-0.01, 0.01), col = &quot;black&quot;, lwd = 3, bty = &quot;l&quot;, shade.col = &quot;azure3&quot;)
+abline(h = 0,col = &quot;black&quot;)</code></pre>
+<p><img src="shortcourse_sofr_files/figure-html/sofr_call_05-1.png" width="768" /></p>
+</div>
 </div>
 </div>
 

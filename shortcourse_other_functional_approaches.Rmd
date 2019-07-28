@@ -19,5 +19,5 @@ This page contains a combination of traditional lecture materials (slides) and c
 
 ## Other functional approaches
 
-PLACEHOLDER FOR PPT SLIDES
+Some other functional approaches recently developed for data from wearables are covered in [these slides](./SlidesPPT/other_functonal_approaches.pdf).
 
